@@ -17,6 +17,10 @@
 		{
 			"Name": "BasicStateMachine",
 			"Enabled": true
+		},
+		{
+			"Name": "GitSourceControl",
+			"Enabled": false
 		}
 	]
 }

@@ -1,4 +1,4 @@
-## Creating Plugin-Based Game Code - Sept 6th - Live From Epic HQ
+## Creating Plugin-Based Game Code - Sept 6th - Live From Epic HQ (Richard Hinckley)
 
 https://forums.unrealengine.com/t/creating-plugin-based-game-code-sept-6th-live-from-epic-hq/72739
 
