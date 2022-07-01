@@ -5,17 +5,14 @@ USM_State* USM_Transition::TryTransition(const UObject* RefObject,
 										 const int32 DataIndex,
 										 int32 &OutDataIndex)
 {
-	OutDataIndex = DataIndex;
-
-	if (!AcceptableInputs.Num() ||
-		DataSource.IsValidIndex(DataIndex) && AcceptableInputs.Contains(DataSource[DataIndex]))
+	OutDataIndex = DataIndex + 1;
+	
+	if (DataSource.IsValidIndex(DataIndex) && AcceptableInputs.Contains(DataSource[DataIndex]))
 	{
-		++OutDataIndex;
 		return bReverseInputTest ? nullptr : DestinationState;
 	}
 
 	return bReverseInputTest ? DestinationState : nullptr;
-	
 }
 
 FStateMachineResult USM_State::RunState(const UObject* RefObject,
@@ -28,8 +25,8 @@ FStateMachineResult USM_State::RunState(const UObject* RefObject,
 	// If we're still running, see where our branches lead.
 	if (RemainingSteps && !bMustEndNow)
 	{
-		USM_State* DestinationState = nullptr;
-		int32 DestinationDataIndex = DataIndex;
+		//USM_State* DestinationState = nullptr;
+		auto DestinationDataIndex = DataIndex;
 
 		for (int32 i = 0; i < InstancedTransitions.Num(); ++i)
 		{
@@ -39,7 +36,22 @@ FStateMachineResult USM_State::RunState(const UObject* RefObject,
 			//ensure(InstancedTransitions[i]);
 			if (InstancedTransitions[i])
 			{
-				DestinationState = InstancedTransitions[i]->TryTransition(RefObject, DataSource, DataIndex, DestinationDataIndex);
+				USM_State* DestinationState = InstancedTransitions[i]->TryTransition(RefObject, DataSource, DataIndex, DestinationDataIndex);
+				
+				if (DestinationState)
+				{
+					return DestinationState->RunState(RefObject, DataSource, DestinationDataIndex, RemainingSteps - 1);
+				}
+			}
+		}
+
+		for (int32 i = 0; i < SharedTransitions.Num(); ++i)
+		{
+			// This could be a check. There shouldn't be a null transitions in the list.
+			if (SharedTransitions[i])
+			{
+				USM_State* DestinationState = SharedTransitions[i]->TryTransition(RefObject, DataSource, DataIndex, DestinationDataIndex);
+				
 				if (DestinationState)
 				{
 					return DestinationState->RunState(RefObject, DataSource, DestinationDataIndex, RemainingSteps - 1);
@@ -52,17 +64,18 @@ FStateMachineResult USM_State::RunState(const UObject* RefObject,
 		{
 			return LoopState(RefObject, DataSource, DataIndex, RemainingSteps);
 		}
+		
 		bMustEndNow = true;
 	}
 
 	const EStateMachineCompletionType StateMachineCompletionType = bMustEndNow ? CompletionType : EStateMachineCompletionType::OutOfSteps;
 	const FStateMachineResult SMR(StateMachineCompletionType, this, DataIndex);
+	//FStateMachineResult SMR;
 	//SMR.FinalState = this;
 	//SMR.DataIndex = DataIndex;
 	//SMR.CompletionType = bMustEndNow ? CompletionType : EStateMachineCompletionType::OutOfSteps;
 
 	return SMR;
-	
 }
 
 FStateMachineResult USM_State::LoopState(const UObject* RefObject,
@@ -72,5 +85,4 @@ FStateMachineResult USM_State::LoopState(const UObject* RefObject,
 {
 	// By default, increment DataIndex by 1 and decrement RemainingSteps by 1.
 	return RunState(RefObject, DataSource, DataIndex + 1, RemainingSteps - 1);
-	
 }

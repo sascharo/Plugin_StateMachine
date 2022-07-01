@@ -1,9 +1,9 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "2.0",
 	"FriendlyName": "C++ BasicStateMachine Plugin",
-	"Description": "C++ Plugin Based State Machine: Game Code | 01 | Live Training | Unreal Engine",
+	"Description": "C++ Plugin Based State Machine: Game Code | Live Training | Unreal Engine",
 	"Category": "Other",
 	"CreatedBy": "Sascha Robitzki",
 	"CreatedByURL": "https://github.com/sascharo/Plugin_StateMachine",

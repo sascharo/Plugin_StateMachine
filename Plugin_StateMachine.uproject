@@ -1,14 +1,15 @@
 {
 	"FileVersion": 3,
 	"EngineAssociation": "4.27",
-	"Category": "",
-	"Description": "",
+	"Category": "State Machine",
+	"Description": "Basic State Machine",
 	"Modules": [
 		{
 			"Name": "Plugin_StateMachine",
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
+				"BasicStateMachine",
 				"Engine"
 			]
 		}

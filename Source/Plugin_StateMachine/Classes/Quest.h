@@ -6,6 +6,8 @@
 #include "Quest.generated.h"
 
 class UQuest;
+class UQuestWithResult;
+class UQuestStatus;
 
 UENUM()
 enum class EQuestCompletion : uint8
@@ -37,6 +39,15 @@ protected:
 
 public:
 	bool UpdateQuest(const UObject* ObjectRef, USM_InputAtom* QuestActivity);
+
+	static FQuestInProgress NewQuestInProgress(const UQuest* Quest)
+	{
+		FQuestInProgress QIP;
+		QIP.Quest = Quest;
+		QIP.QuestProgress = EQuestCompletion::EQC_Started;
+		
+		return QIP;
+	}
 	
 };
 
@@ -61,6 +72,37 @@ public:
 	// The blacklist/whitelist (depending on bBlackList) used to filter InputAtoms this Quest recognizes.
 	UPROPERTY(EditAnywhere)
 	TArray<USM_InputAtom*> InputList;
+
+	virtual void OnSucceeded(class UQuestStatus* QuestStatus) const;
+	virtual void OnFailed(class UQuestStatus* QuestStatus) const;
+	
+};
+
+UCLASS()
+class PLUGIN_STATEMACHINE_API UQuestWithResult : public UQuest
+{
+	GENERATED_BODY()
+
+protected:
+	// The quests in this list will go from NotStarted to Started if the current quest succeeds.
+	UPROPERTY(EditAnywhere)
+	TArray<UQuest*> SuccessQuests;
+
+	// Input atoms to add if the quest succeeds.
+	UPROPERTY(EditAnywhere)
+	TArray<USM_InputAtom*> SuccessInputs;
+
+	// The quests in this list will go from NotStarted to Started if the current quest fails.
+	UPROPERTY(EditAnywhere)
+	TArray<UQuest*> FailureQuests;
+
+	// Input atoms to add if the quest fails.
+	UPROPERTY(EditAnywhere)
+	TArray<USM_InputAtom*> FailureInputs;
+	
+public:
+	virtual void OnSucceeded(UQuestStatus* QuestStatus) const override;
+	virtual void OnFailed(UQuestStatus* QuestStatus) const override;
 	
 };
 
@@ -89,20 +131,27 @@ public:
 	}
 
 	// Called when the game starts.
-	//virtual void BeginPlay() override
-	//{
-	//	Super::BeginPlay();
-	//}
+	virtual void BeginPlay() override
+	{
+		Super::BeginPlay();
+	}
 
 	// Called every frame.
-	//virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
-	//{
-	//	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	//}
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override
+	{
+		Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	}
+
+	UFUNCTION(BlueprintCallable, Category="Quests")
+	void LogLast();
 
 	// Add to our quest activity log!
 	// This also automatically checks to see if any unfinished quests are now complete.
 	UFUNCTION(BlueprintCallable, Category="Quests")
 	void UpdateQuests(USM_InputAtom* QuestActivity);
+
+	// Add a new quest-in-progress entry, or begin the quest provided if it's already on the list and hasn't been started yet.
+	UFUNCTION(BlueprintCallable, Category="Quests")
+	bool BeginQuest(const UQuest* Quest);
 	
 };

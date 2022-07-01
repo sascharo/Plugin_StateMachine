@@ -38,10 +38,10 @@ struct BASICSTATEMACHINE_API FStateMachineResult
 
 	FStateMachineResult(): CompletionType(), FinalState(nullptr), DataIndex(0) {}
 
-	FStateMachineResult(const EStateMachineCompletionType Type, USM_State* EndState, int32 DataIdx)
+	FStateMachineResult(const EStateMachineCompletionType StateMachineCompletionType, USM_State* USMFinalState, int32 DataIdx)
 	{
-		CompletionType = Type;
-		FinalState = EndState;
+		CompletionType = StateMachineCompletionType;
+		FinalState = USMFinalState;
 		DataIndex = DataIdx;
 	}
 	
@@ -60,7 +60,7 @@ public:
 };
 
 UCLASS(EditInlineNew)
-class USM_Transition : public UDataAsset
+class BASICSTATEMACHINE_API USM_Transition : public UDataAsset
 {
 	GENERATED_BODY()
 
@@ -130,4 +130,9 @@ protected:
 	UPROPERTY(EditAnywhere, Instanced)
 	TArray<USM_Transition*> InstancedTransitions;
 
+	// Transitions to other states.
+	// These are in priority order, so the first successful branch will be taken. These run after InstancedTransitions.
+	UPROPERTY(EditAnywhere)
+	TArray<USM_Transition*> SharedTransitions;
+	
 };
