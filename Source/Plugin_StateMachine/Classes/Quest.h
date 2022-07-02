@@ -24,6 +24,19 @@ struct FQuestInProgress
 {
 	GENERATED_USTRUCT_BODY()
 
+public:
+	bool UpdateQuest(const UObject* ObjectRef, USM_InputAtom* QuestActivity);
+
+	static FQuestInProgress NewQuestInProgress(const UQuest* Quest)
+	{
+		FQuestInProgress QIP;
+		QIP.Quest = Quest;
+		QIP.QuestProgress = EQuestCompletion::EQC_Started;
+		
+		return QIP;
+	}
+
+public:
 	// Quest data asset.
 	UPROPERTY(EditAnywhere)
 	const UQuest* Quest;
@@ -36,18 +49,6 @@ protected:
 	// All input for this quest, filtered by the quest's blacklist/whitelist.
 	UPROPERTY(EditAnywhere)
 	TArray<USM_InputAtom*> QuestActivities;
-
-public:
-	bool UpdateQuest(const UObject* ObjectRef, USM_InputAtom* QuestActivity);
-
-	static FQuestInProgress NewQuestInProgress(const UQuest* Quest)
-	{
-		FQuestInProgress QIP;
-		QIP.Quest = Quest;
-		QIP.QuestProgress = EQuestCompletion::EQC_Started;
-		
-		return QIP;
-	}
 	
 };
 
@@ -56,6 +57,10 @@ class PLUGIN_STATEMACHINE_API UQuest : public UDataAsset
 {
 	GENERATED_BODY()
 
+public:
+	virtual void OnSucceeded(class UQuestStatus* QuestStatus) const;
+	virtual void OnFailed(class UQuestStatus* QuestStatus) const;
+	
 public:
 	// The name of the quest.
 	UPROPERTY(EditAnywhere)
@@ -72,9 +77,6 @@ public:
 	// The blacklist/whitelist (depending on bBlackList) used to filter InputAtoms this Quest recognizes.
 	UPROPERTY(EditAnywhere)
 	TArray<USM_InputAtom*> InputList;
-
-	virtual void OnSucceeded(class UQuestStatus* QuestStatus) const;
-	virtual void OnFailed(class UQuestStatus* QuestStatus) const;
 	
 };
 
@@ -83,6 +85,10 @@ class PLUGIN_STATEMACHINE_API UQuestWithResult : public UQuest
 {
 	GENERATED_BODY()
 
+public:
+	virtual void OnSucceeded(UQuestStatus* QuestStatus) const override;
+	virtual void OnFailed(UQuestStatus* QuestStatus) const override;
+	
 protected:
 	// The quests in this list will go from NotStarted to Started if the current quest succeeds.
 	UPROPERTY(EditAnywhere)
@@ -100,25 +106,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TArray<USM_InputAtom*> FailureInputs;
 	
-public:
-	virtual void OnSucceeded(UQuestStatus* QuestStatus) const override;
-	virtual void OnFailed(UQuestStatus* QuestStatus) const override;
-	
 };
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PLUGIN_STATEMACHINE_API UQuestStatus : public UActorComponent
 {
 	GENERATED_BODY()
-
-protected:
-	// The master list of all quest-related things we've down.
-	UPROPERTY(EditAnywhere)
-	TArray<USM_InputAtom*> QuestActivities;
-
-	// The list of quests in our current game or area.
-	UPROPERTY(EditAnywhere)
-	TArray<FQuestInProgress> QuestList;
 	
 public:
 	// Sets default values for this component's properties.
@@ -153,5 +146,14 @@ public:
 	// Add a new quest-in-progress entry, or begin the quest provided if it's already on the list and hasn't been started yet.
 	UFUNCTION(BlueprintCallable, Category="Quests")
 	bool BeginQuest(const UQuest* Quest);
+
+protected:
+	// The master list of all quest-related things we've down.
+	UPROPERTY(EditAnywhere)
+	TArray<USM_InputAtom*> QuestActivities;
+
+	// The list of quests in our current game or area.
+	UPROPERTY(EditAnywhere)
+	TArray<FQuestInProgress> QuestList;
 	
 };
